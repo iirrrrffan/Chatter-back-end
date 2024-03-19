@@ -6,6 +6,7 @@ const cors =require("cors")
 const authRoute = require("./routes/auth")
 const userRoute = require("./routes/users");
 const bodyParser = require("body-parser");
+const morgan= require('morgan')
 
 mongoose.connect("mongodb://127.0.0.1:27017/Chatter",{
 useNewUrlParser: true,
@@ -20,7 +21,7 @@ useUnifiedTopology:true
 
 // middleware
 app.use(express.json()); 
-app.use(bodyParser.urlencoded({extended:true}))
+app.use(morgan('dev'));
 
 
 app.use(cors())
