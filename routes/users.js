@@ -1,28 +1,49 @@
+const imageUpload = require("../middleware/imageUploade");
 const User = require("../model/User");
 const router = require("express").Router();
 const bcrypt = require("bcrypt");
 
+
+
+
 //update user
-router.put("/:id", async (req, res) => {
-  if (req.body.userId === req.params.id || req.body.isAdmin) {
-    if (req.body.password) {
-      try {
-        const salt = await bcrypt.genSalt(10);
-        req.body.password = await bcrypt.hash(req.body.password, salt);
-      } catch (err) {
-        return res.status(500).json(err);
+router.put("/:id", imageUpload("profilePicture"),async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { username, email} = req.body;
+    const { profilePicture } = req.body;
+    const {coverPicture} = req.body;
+    console.log(profilePicture);
+ 
+    console.log("nameeeee ", username, email);
+    let user = await User.findById(userId); 5
+    if (!user) return res.status(400).json({ error: "User not found" });
+
+    if (req.params.id !== userId.toString())
+      return res
+        .status(400)
+        .json({ error: "You can't Update other user's profile" });
+
+    if (profilePicture && coverPicture) {
+      if (user.profilePicture && user.coverPicture) {
+        await cloudinary.uploader.destroy(
+          user.profilePicture.split("/").pop(".")[0],
+          user.coverPicture.split("/").pop(".")[0]
+        );
       }
     }
-    try {
-      const user = await User.findByIdAndUpdate(req.params.id, {
-        $set: req.body,
-      });
-      res.status(200).json("Account has been updated");
-    } catch (err) {
-      return res.status(500).json(err);
-    }
-  } else {
-    return res.status(403).json("You can update only your account!");
+
+    user.email = email || user.email;
+    user.username = username || user.username;
+    user.profilePicture = profilePicture || user.profilePicture;
+    user.coverPicture = coverPicture || user.coverPicture;
+
+    user = await user.save();
+
+    res.status(200).json({ message: "Profile upadated succesfully", user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+    console.log("Error in updateUser: ", error.message);
   }
 });
 
